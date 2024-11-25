@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cancer Prediction Model</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --background: #f5f7fa;
+            --text: #2c3e50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text);
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+        }
+
+        .question {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        button {
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            background: #357ABD;
+        }
+
+        button.reset {
+            grid-column: span 2;
+            background: #e74c3c;
+        }
+
+        .results {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .cancer-type {
+            padding: 0.8rem;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            font-weight: 500;
+        }
+
+        /* Cancer type colors */
+        .lung { background: #90A4AE; color: black; }
+        .melanoma { background: #212121; }
+        .kidney { background: #FFC107; color: black; }
+        .esophagus { background: #9C27B0; }
+        .prostate { background: #03A9F4; }
+        .pancreas { background: #6A1B9A; }
+        .intestine { background: #2196F3; }
+        .liver { background: #4CAF50; }
+        .bladder { background: #FFD54F; color: black; }
+        .head-neck { background: #D32F2F; }
+        .stomach { background: #81D4FA; color: black; }
+        .rectum { background: #1565C0; }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Male Cancer Prediction Model</h1>
+        
+        <div id="questionSection">
+            <p class="question" id="currentQuestion">Does the patient have bone metastasis?</p>
+            <div class="buttons">
+                <button onclick="handleAnswer(true)">Yes</button>
+                <button onclick="handleAnswer(false)">No</button>
+            </div>
+        </div>
+
+        <div id="resultsSection" class="hidden">
+            <h2 style="text-align: center; margin-bottom: 1rem;">Possible Primary Cancer Sites</h2>
+            <div id="results" class="results"></div>
+            <div class="buttons" style="margin-top: 2rem;">
+                <button onclick="resetQuestions()" class="reset">Start Over</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            boneMetastasis: null,
+            liverMetastasis: null,
+            brainMetastasis: null
+        };
+
+        function getPossibleCancers() {
+            const { boneMetastasis, liverMetastasis, brainMetastasis } = state;
+            
+            if (boneMetastasis) {
+                if (liverMetastasis) {
+                    if (brainMetastasis) {
+                        return [
+                            { name: 'Lung', class: 'lung' },
+                            { name: 'Melanoma', class: 'melanoma' },
+                            { name: 'Kidney', class: 'kidney' },
+                            { name: 'Esophagus', class: 'esophagus' },
+                            { name: 'Intestine', class: 'intestine' }
+                        ];
+                    } else {
+                        return [
+                            { name: 'Lung', class: 'lung' },
+                            { name: 'Pancreas', class: 'pancreas' },
+                            { name: 'Esophagus', class: 'esophagus' },
+                            { name: 'Prostate', class: 'prostate' },
+                            { name: 'Intestine', class: 'intestine' }
+                        ];
+                    }
+                } else {
+                    if (brainMetastasis) {
+                        return [
+                            { name: 'Lung', class: 'lung' },
+                            { name: 'Prostate', class: 'prostate' },
+                            { name: 'Esophagus', class: 'esophagus' },
+                            { name: 'Melanoma', class: 'melanoma' },
+                            { name: 'Kidney', class: 'kidney' }
+                        ];
+                    } else {
+                        return [
+                            { name: 'Prostate', class: 'prostate' },
+                            { name: 'Lung', class: 'lung' },
+                            { name: 'Kidney', class: 'kidney' },
+                            { name: 'Liver', class: 'liver' },
+                            { name: 'Bladder', class: 'bladder' }
+                        ];
+                    }
+                }
+            } else {
+                if (liverMetastasis) {
+                    if (brainMetastasis) {
+                        return [
+                            { name: 'Lung', class: 'lung' },
+                            { name: 'Melanoma', class: 'melanoma' },
+                            { name: 'Esophagus', class: 'esophagus' },
+                            { name: 'Kidney', class: 'kidney' },
+                            { name: 'Intestine', class: 'intestine' }
+                        ];
+                    } else {
+                        return [
+                            { name: 'Pancreas', class: 'pancreas' },
+                            { name: 'Intestine', class: 'intestine' },
+                            { name: 'Lung', class: 'lung' },
+                            { name: 'Stomach', class: 'stomach' },
+                            { name: 'Rectum', class: 'rectum' }
+                        ];
+                    }
+                } else {
+                    if (brainMetastasis) {
+                        return [
+                            { name: 'Lung', class: 'lung' },
+                            { name: 'Melanoma', class: 'melanoma' },
+                            { name: 'Esophagus', class: 'esophagus' },
+                            { name: 'Kidney', class: 'kidney' },
+                            { name: 'Stomach', class: 'stomach' }
+                        ];
+                    } else {
+                        return [
+                            { name: 'Lung', class: 'lung' },
+                            { name: 'Head and Neck', class: 'head-neck' },
+                            { name: 'Intestine', class: 'intestine' },
+                            { name: 'Esophagus', class: 'esophagus' },
+                            { name: 'Stomach', class: 'stomach' }
+                        ];
+                    }
+                }
+            }
+        }
+
+        function updateQuestion() {
+            const questionEl = document.getElementById('currentQuestion');
+            if (state.boneMetastasis === null) {
+                questionEl.textContent = 'Does the patient have bone metastasis?';
+            } else if (state.liverMetastasis === null) {
+                questionEl.textContent = 'Does the patient have liver metastasis?';
+            } else if (state.brainMetastasis === null) {
+                questionEl.textContent = 'Does the patient have brain metastasis?';
+            }
+        }
+
+        function showResults() {
+            document.getElementById('questionSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.remove('hidden');
+            
+            const resultsEl = document.getElementById('results');
+            resultsEl.innerHTML = '';
+            
+            getPossibleCancers().forEach(cancer => {
+                const div = document.createElement('div');
+                div.className = `cancer-type ${cancer.class}`;
+                div.textContent = cancer.name;
+                resultsEl.appendChild(div);
+            });
+        }
+
+        function handleAnswer(answer) {
+            if (state.boneMetastasis === null) {
+                state.boneMetastasis = answer;
+            } else if (state.liverMetastasis === null) {
+                state.liverMetastasis = answer;
+            } else if (state.brainMetastasis === null) {
+                state.brainMetastasis = answer;
+                showResults();
+                return;
+            }
+            updateQuestion();
+        }
+
+        function resetQuestions() {
+            state.boneMetastasis = null;
+            state.liverMetastasis = null;
+            state.brainMetastasis = null;
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('questionSection').classList.remove('hidden');
+            updateQuestion();
+        }
+    </script>
+</body>
+</html>
